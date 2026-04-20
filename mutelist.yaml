@@ -104,6 +104,7 @@ Mutelist:
           Regions:
             - eu-west-1
           Resources:
+            - adviezen-webdav:*
             - vespadb-*
             - inbo-aloft-*
             - inbo-waterbirds-*

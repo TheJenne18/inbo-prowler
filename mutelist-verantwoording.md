@@ -88,6 +88,7 @@ Laatst bijgewerkt: 2026-04-13
 ### `ecs_task_definitions_containers_readonly_access`
 **Gemute voor:** `vbp-*` (biodiversiteitsportaal), `vespadb-*` (vespawatch), `inbo-aloft-*` (aloft), `inbo-waterbirds-*` (waterbirds), `inbo-mne-*` (mne-sampling)
 **Reden:**
+- **adviezen-webdav**: Deze container is essential = false en ephemeral, dus readonly voegt hier weinig toe
 - **vbp-***: De ALA (Atlas of Living Australia) containers vereisen schrijftoegang tot het root filesystem voor runtime configuratie-initialisatie. Elke VBP-service heeft een `config-init` sidecar container die configuratiebestanden schrijft naar het shared filesystem voordat de applicatie start. Dit is een architectuurbeperking van de ALA-software die niet eenvoudig aan te passen is.
 - **vespadb-***: Applicatie gaat end-of-life eind april 2026. Investering in security hardening is niet verantwoord.
 - **inbo-aloft-***: Overgeslagen op verzoek.
