@@ -1,0 +1,153 @@
+Mutelist:
+  Accounts:
+    '*':
+      Checks:
+        guardduty_is_enabled:
+          Regions:
+            - '*'
+          Resources:
+            - '*'
+        s3_bucket_public_access:
+          Regions:
+            - eu-west-1
+          Resources:
+            - inbo-aloft-uat-eu-west-1-default
+            - aloftdata
+        s3_bucket_public_list_acl:
+          Regions:
+            - eu-west-1
+          Resources:
+            - inbo-aloft-uat-eu-west-1-default
+            - aloftdata
+        iam_root_hardware_mfa_enabled:
+          Regions:
+            - '*'
+          Resources:
+            - '*'
+        ecs_service_no_assign_public_ip:
+          Regions:
+            - eu-west-1
+          Resources:
+            - inbo-adviezen-cluster/webdav-service
+        inspector2_active_findings_exist:
+          Regions:
+            - '*'
+          Resources:
+            - '*'
+        iam_role_administratoraccess_policy:
+          Regions:
+            - '*'
+          Resources:
+            - OrganizationAccountAccessRole
+            - inbo-devops-role
+            - inbo-devops-github-actions-deployer-role
+            - stacksets-exec-*
+        iam_user_administrator_access_policy:
+          Regions:
+            - '*'
+          Resources:
+            - bert.huygens@inbo.be
+        awslambda_function_no_secrets_in_code:
+          Regions:
+            - eu-west-1
+          Resources:
+            - inbo-vbp-biocache-index-management
+        s3_account_level_public_access_blocks:
+          Regions:
+            - '*'
+          Resources:
+            - '*'
+        iam_root_credentials_management_enabled:
+          Regions:
+            - '*'
+          Resources:
+            - '*'
+        awslambda_function_no_secrets_in_variables:
+          Regions:
+            - eu-west-1
+          Resources:
+            - inbo-watina-calibration-function
+        ecs_task_definitions_no_environment_secrets:
+          Regions:
+            - eu-west-1
+          Resources:
+            - inbo-bodem-dov-etl:*
+            - inbo-watina-dov-etl:*
+        iam_role_cross_account_readonlyaccess_policy:
+          Regions:
+            - '*'
+          Resources:
+            - SnowOrganizationAccount*
+            - inbo-biodiversiteitsportaal-developers-role
+            - inbo-developers-role
+        iam_inline_policy_allows_privilege_escalation:
+          Regions:
+            - '*'
+          Resources:
+            - StackSet-CloudHealthRoleUpdate--LambdaExecutionRole-*
+            - inbo-faunabeheer-shinyproxy-wbe-task-role
+            - inbo-faunabeheer-shinyproxy-faunabeheer-task-role
+            - inbo-bodem-role
+            - inbo-aloft-eventbridge-scheduler
+            - BillingConsolePolicyMigratorRole
+            - inbo-watina-github-actions-deploy-lambda-role
+            - inbo-exotenportaal-shinyproxy-task-role
+            - inbo-watina-dov-role
+        iam_policy_allows_privilege_escalation:
+          Regions:
+            - '*'
+          Resources:
+            - inbo-vbp-start-pipelines-policy
+            - inbo-github-runners-lambda-execution-policy
+            - inbo-vbp-additional-dev-permissions
+        ecs_task_definitions_containers_readonly_access:
+          Regions:
+            - eu-west-1
+          Resources:
+            - vespadb-*
+            - inbo-aloft-*
+            - inbo-waterbirds-*
+            - inbo-mne-*
+            - '*vbp*'
+        iam_role_cross_service_confused_deputy_prevention:
+          Regions:
+            - '*'
+          Resources:
+            - '*CloudHealth*'
+        ec2_instance_with_outdated_ami:
+          Regions:
+            - eu-west-1
+          Resources:
+            - i-09cc110fbb1f04ed4
+            - i-0ceda6bc49989921f
+        iam_aws_attached_policy_no_administrative_privileges:
+          Regions:
+            - '*'
+          Resources:
+            - AdministratorAccess
+    '625469168093':
+      Checks:
+        s3_bucket_cross_account_access:
+          Regions:
+            - eu-west-1
+          Resources:
+            - inbo-aloft-uat-eu-west-1-default
+            - inbo-exotenportaal-uat-eu-west-1-default
+        ecs_service_no_assign_public_ip:
+          Regions:
+            - eu-west-1
+          Resources:
+            - webdav-service
+    '800040084629':
+      Checks:
+        s3_bucket_cross_account_access:
+          Regions:
+            - eu-west-1
+          Resources:
+            - inbo-meetnetten-prod-export-datawarehouse
+            - aloftdata
+        ecs_service_no_assign_public_ip:
+          Regions:
+            - eu-west-1
+          Resources:
+            - webdav-service
