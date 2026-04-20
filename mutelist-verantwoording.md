@@ -35,6 +35,7 @@ Laatst bijgewerkt: 2026-04-13
 - `inbo-devops-role`: DevOps team role die volledige toegang nodig heeft voor infrastructuurbeheer. Toegang is beperkt via IAM Identity Center met MFA-vereiste.
 - `inbo-devops-github-actions-deployer-role`: CI/CD deployer role. Heeft brede toegang nodig voor Terraform applies over alle services. Beperkt via OIDC federation tot specifieke GitHub repositories.
 - `stacksets-exec-*`: AWS CloudFormation StackSets execution roles. Vereist door AWS voor cross-account StackSet operaties.
+- `*QuickSetup*`: Is opgezet door Atos
 
 ### `iam_user_administrator_access_policy`
 **Gemute voor:** `bert.huygens@inbo.be`
@@ -100,8 +101,9 @@ Laatst bijgewerkt: 2026-04-13
 **Reden:** Beide zijn stateful EC2 instances met grote datavolumes. Een AMI update via Terraform zou de instances herlanceren en alle data vernietigen. AMI updates op deze instances vereisen een gepland maintenance window met snapshots en migratieprocedure. De n2kmonitoring instance heeft expliciet `lifecycle { ignore_changes = [ami] }` in Terraform.
 
 ### `iam_role_cross_service_confused_deputy_prevention`
-**Gemute voor:** `*CloudHealth*`
-**Reden:** CloudHealth integratie roles worden beheerd door VMware/Broadcom CloudHealth. De assume role policies worden extern bepaald en kunnen niet aangepast worden zonder de integratie te breken.
+**Gemute voor:** `*CloudHealth*, *QuickSetup*`
+**Reden:** CloudHealth integratie roles worden beheerd door VMware/Broadcom CloudHealth. De assume role policies worden extern bepaald en kunnen niet aangepast worden zonder de integratie te breken. And QuickSetup omdat dit roles zijn Atos
+
 
 ### `iam_aws_attached_policy_no_administrative_privileges`
 **Gemute voor:** `AdministratorAccess`
@@ -120,6 +122,14 @@ Laatst bijgewerkt: 2026-04-13
 ### `ecs_service_no_assign_public_ip`
 **Gemute voor:** `webdav-service`
 **Reden:** Zie adviezen webdav-service hierboven. Zelfde service in UAT-omgeving.
+
+---
+
+## Account `347082780157`
+
+### `rds_instance_transport_encrypted`
+**Gemute voor:** `inbo-utility-shared-infra` in `eu-west-1`
+**Reden:** Koha (het bibliotheeksysteem) ondersteunt geen encrypted transport naar de RDS database. Dit is een beperking van de applicatie.
 
 ---
 

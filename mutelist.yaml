@@ -42,6 +42,7 @@ Mutelist:
             - inbo-devops-role
             - inbo-devops-github-actions-deployer-role
             - stacksets-exec-*
+            - '*QuickSetup*'
         iam_user_administrator_access_policy:
           Regions:
             - '*'
@@ -115,6 +116,7 @@ Mutelist:
             - '*'
           Resources:
             - '*CloudHealth*'
+            - '*QuickSetup*'
         ec2_instance_with_outdated_ami:
           Regions:
             - eu-west-1
@@ -139,6 +141,13 @@ Mutelist:
             - eu-west-1
           Resources:
             - webdav-service
+    '347082780157':
+      Checks:
+        rds_instance_transport_encrypted:
+          Regions:
+            - eu-west-1
+          Resources:
+            - inbo-utility-shared-infra
     '800040084629':
       Checks:
         s3_bucket_cross_account_access:
