@@ -113,6 +113,14 @@ Laatst bijgewerkt: 2026-04-13
 
 ## Account `625469168093` (inbo-uat)
 
+### `ecs_task_definitions_containers_readonly_access`
+**Gemute voor:** `sp-task-definition-*`
+**Reden:** ShinyProxy task definitions voor faunabeheer, wbe en exotenportaal. De ShinyProxy containers vereisen schrijftoegang tot het root filesystem voor hun werking.
+
+### `iam_role_cross_service_confused_deputy_prevention`
+**Gemute voor:** `inbo-waterbirds-*`
+**Reden:** Waterbirds ontwikkeling staat on hold waardoor de resources niet meer gedeployed kunnen worden. Op dev is dit wel in orde.
+
 ### `s3_bucket_cross_account_access`
 **Gemute voor:** `inbo-aloft-uat-eu-west-1-default`, `inbo-exotenportaal-uat-eu-west-1-default`
 **Reden:**
@@ -134,6 +142,14 @@ Laatst bijgewerkt: 2026-04-13
 ---
 
 ## Account `800040084629` (inbo-prod)
+
+### `ecs_task_definitions_containers_readonly_access`
+**Gemute voor:** `sp-task-definition-*`
+**Reden:** ShinyProxy task definitions voor faunabeheer, wbe en exotenportaal. De ShinyProxy containers vereisen schrijftoegang tot het root filesystem voor hun werking.
+
+### `iam_role_cross_service_confused_deputy_prevention`
+**Gemute voor:** `inbo-waterbirds-*`
+**Reden:** Waterbirds ontwikkeling staat on hold waardoor de resources niet meer gedeployed kunnen worden. Op dev is dit wel in orde.
 
 ### `s3_bucket_cross_account_access`
 **Gemute voor:** `inbo-meetnetten-prod-export-datawarehouse`, `aloftdata`

@@ -130,6 +130,16 @@ Mutelist:
             - AdministratorAccess
     '625469168093':
       Checks:
+        ecs_task_definitions_containers_readonly_access:
+          Regions:
+            - eu-west-1
+          Resources:
+            - 'sp-task-definition-*'
+        iam_role_cross_service_confused_deputy_prevention:
+          Regions:
+            - '*'
+          Resources:
+            - 'inbo-waterbirds-*'
         s3_bucket_cross_account_access:
           Regions:
             - eu-west-1
@@ -150,6 +160,16 @@ Mutelist:
             - inbo-utility-shared-infra
     '800040084629':
       Checks:
+        ecs_task_definitions_containers_readonly_access:
+          Regions:
+            - eu-west-1
+          Resources:
+            - 'sp-task-definition-*'
+        iam_role_cross_service_confused_deputy_prevention:
+          Regions:
+            - '*'
+          Resources:
+            - 'inbo-waterbirds-*'
         s3_bucket_cross_account_access:
           Regions:
             - eu-west-1
