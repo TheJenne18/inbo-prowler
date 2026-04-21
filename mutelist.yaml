@@ -165,6 +165,7 @@ Mutelist:
             - eu-west-1
           Resources:
             - 'sp-task-definition-*'
+            - 'inbo-aws-bodem-etl:2'
         iam_role_cross_service_confused_deputy_prevention:
           Regions:
             - '*'

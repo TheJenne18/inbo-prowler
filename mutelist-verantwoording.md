@@ -144,8 +144,10 @@ Laatst bijgewerkt: 2026-04-13
 ## Account `800040084629` (inbo-prod)
 
 ### `ecs_task_definitions_containers_readonly_access`
-**Gemute voor:** `sp-task-definition-*`
-**Reden:** ShinyProxy task definitions voor faunabeheer, wbe en exotenportaal. De ShinyProxy containers vereisen schrijftoegang tot het root filesystem voor hun werking.
+**Gemute voor:** `sp-task-definition-*`, `inbo-aws-bodem-etl:2`
+**Reden:**
+- **sp-task-definition-***: ShinyProxy task definitions voor faunabeheer, wbe en exotenportaal. De ShinyProxy containers vereisen schrijftoegang tot het root filesystem voor hun werking.
+- **inbo-aws-bodem-etl:2**: Wacht op bevestiging van developer Johan Van de Wauw om te testen en te bevestigen. Mail gestuurd op 2026-04-14.
 
 ### `iam_role_cross_service_confused_deputy_prevention`
 **Gemute voor:** `inbo-waterbirds-*`
