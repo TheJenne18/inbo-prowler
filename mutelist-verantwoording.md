@@ -80,6 +80,7 @@ Laatst bijgewerkt: 2026-04-28
 - `inbo-watina-github-actions-deploy-lambda-role`: GitHub Actions CI/CD role met `lambda:UpdateFunctionCode` beperkt tot 2 specifieke Lambda functions (`calibration-function` en `pressuremeasurement-status-change-function`). Role is alleen assumable via OIDC vanuit `repo:inbo/watina-backend`.
 - `inbo-exotenportaal-shinyproxy-task-role`: ShinyProxy task role met `ecs:RunTask` + `iam:PassRole`. PassRole is beperkt tot `portal_task_execution_role` en `portal_task_role` — enkel de roles nodig om exotenportaal containers te starten.
 - `inbo-watina-dov-role`: DOV integratie role met `ecs:RunTask` + `iam:PassRole`. PassRole is beperkt tot `inbo-watina-dov-etl-task-role` en `inbo-watina-dov-etl-task-execution-role`. Role is alleen assumable door een specifiek extern AWS account (DOV/Vlaamse Overheid).
+- `inbo-vbp-pipelines-emr-service-role`: EMR service role met `ec2:RunInstances` + `iam:PassRole`. Beide acties zijn inherent vereist door Amazon EMR om de EC2 instances van het cluster te starten en de instance profile role te koppelen. PassRole is beperkt tot het EMR EC2 instance profile. Dit is de standaard AWS-aanbevolen configuratie voor EMR clusters die door de VBP data pipelines gebruikt worden.
 
 ### `iam_policy_allows_privilege_escalation`
 **Gemute voor:** `inbo-vbp-start-pipelines-policy`, `inbo-github-runners-lambda-execution-policy`, `inbo-vbp-additional-dev-permissions`
@@ -89,10 +90,10 @@ Laatst bijgewerkt: 2026-04-28
 - `inbo-vbp-additional-dev-permissions`: Development-only policy voor het biodiversiteitsportaal team. Bevat bredere IAM rechten die nodig zijn voor development workflows. Enkel toegepast in dev accounts.
 
 ### `ecs_task_definitions_containers_readonly_access`
-**Gemute voor:** `vbp-*` (biodiversiteitsportaal), `vespadb-*` (vespawatch), `inbo-aloft-*` (aloft), `inbo-waterbirds-*` (waterbirds), `inbo-mne-*` (mne-sampling)
+**Gemute voor:** `inbo-vbp-spatial-service:*` (biodiversiteitsportaal geoserver), `vespadb-*` (vespawatch), `inbo-aloft-*` (aloft), `inbo-waterbirds-*` (waterbirds), `inbo-mne-*` (mne-sampling)
 **Reden:**
 - **adviezen-webdav**: Deze container is essential = false en ephemeral, dus readonly voegt hier weinig toe
-- **vbp-***: De ALA (Atlas of Living Australia) containers vereisen schrijftoegang tot het root filesystem voor runtime configuratie-initialisatie. Elke VBP-service heeft een `config-init` sidecar container die configuratiebestanden schrijft naar het shared filesystem voordat de applicatie start. Dit is een architectuurbeperking van de ALA-software die niet eenvoudig aan te passen is.
+- **inbo-vbp-spatial-service**: De geoserver container vereist schrijftoegang tot het root filesystem voor de GeoServer data directory (workspaces, styles, caches en runtime configuratie). Dit is een beperking van de GeoServer-architectuur en kan niet eenvoudig naar een dedicated volume verplaatst worden zonder ingrijpende aanpassingen aan de ALA (Atlas of Living Australia) deployment.
 - **vespadb-***: Applicatie gaat end-of-life eind april 2026. Investering in security hardening is niet verantwoord.
 - **inbo-aloft-***: Overgeslagen op verzoek.
 - **inbo-waterbirds-***: Project staat on hold.

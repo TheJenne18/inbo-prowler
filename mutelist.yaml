@@ -95,6 +95,7 @@ Mutelist:
             - inbo-watina-github-actions-deploy-lambda-role
             - inbo-exotenportaal-shinyproxy-task-role
             - inbo-watina-dov-role
+            - inbo-vbp-pipelines-emr-service-role
         iam_policy_allows_privilege_escalation:
           Regions:
             - '*'
@@ -111,6 +112,7 @@ Mutelist:
             - inbo-aloft-*
             - inbo-waterbirds-*
             - inbo-mne-*
+            - inbo-vbp-spatial-service:*
         iam_role_cross_service_confused_deputy_prevention:
           Regions:
             - '*'
