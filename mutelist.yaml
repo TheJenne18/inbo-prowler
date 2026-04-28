@@ -111,7 +111,6 @@ Mutelist:
             - inbo-aloft-*
             - inbo-waterbirds-*
             - inbo-mne-*
-            - '*vbp*'
         iam_role_cross_service_confused_deputy_prevention:
           Regions:
             - '*'
