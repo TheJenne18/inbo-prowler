@@ -2,7 +2,7 @@
 
 Dit document beschrijft waarom bepaalde Prowler findings gemute zijn als accepted risk.
 
-Laatst bijgewerkt: 2026-04-13
+Laatst bijgewerkt: 2026-04-28
 
 ---
 
@@ -42,8 +42,10 @@ Laatst bijgewerkt: 2026-04-13
 **Reden:** Legacy IAM user met AdministratorAccess. Wordt gemigreerd naar IAM Identity Center. Tijdelijk gemute tot migratie afgerond is.
 
 ### `awslambda_function_no_secrets_in_code`
-**Gemute voor:** `inbo-vbp-biocache-index-management`
-**Reden:** False positive. De Lambda function bevat een Node.js dependency (npm package) die een private key template/placeholder bevat in de gebundelde code. Dit is geen echte secret maar een patroon in de library code dat door Prowler's regex-detectie als secret wordt herkend.
+**Gemute voor:** `inbo-vbp-biocache-index-management`, `inbo-watina-pressuremeasurement-status-change-function`
+**Reden:**
+- **inbo-vbp-biocache-index-management**: False positive. De Lambda function bevat een Node.js dependency (npm package) die een private key template/placeholder bevat in de gebundelde code. Dit is geen echte secret maar een patroon in de library code dat door Prowler's regex-detectie als secret wordt herkend.
+- **inbo-watina-pressuremeasurement-status-change-function**: False positive. Prowler detecteert een "Hex High Entropy String" in het bestand `about.mappings` (regel 5) in de shadow JAR. Dit bestand is afkomstig van een Eclipse/Spring library dependency en bevat een git commit hash (`c6d5b3bf2ad1176192d6b8084299d5c9d1345046`), geen echte secret. De Lambda zelf haalt database credentials correct op via AWS Secrets Manager.
 
 ### `s3_account_level_public_access_blocks`
 **Gemute voor:** alle accounts

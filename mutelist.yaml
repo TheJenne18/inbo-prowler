@@ -53,6 +53,7 @@ Mutelist:
             - eu-west-1
           Resources:
             - inbo-vbp-biocache-index-management
+            - inbo-watina-pressuremeasurement-status-change-function
         s3_account_level_public_access_blocks:
           Regions:
             - '*'
