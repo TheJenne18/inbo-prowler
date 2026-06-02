@@ -2,7 +2,7 @@
 
 Dit document beschrijft waarom bepaalde Prowler findings gemute zijn als accepted risk.
 
-Laatst bijgewerkt: 2026-04-28
+Laatst bijgewerkt: 2026-06-02
 
 ---
 
@@ -12,9 +12,17 @@ Laatst bijgewerkt: 2026-04-28
 **Gemute voor:** alle regions, alle resources
 **Reden:** GuardDuty wordt centraal beheerd via de AWS Organizations management account en is gedelegeerd naar het security account. Prowler scant individuele member accounts en detecteert dat GuardDuty niet lokaal geconfigureerd is, maar het is wel actief via de organisatie-brede configuratie.
 
-### `s3_bucket_public_access` / `s3_bucket_public_list_acl`
+### `guardduty_delegated_admin_enabled_all_regions`
+**Gemute voor:** alle regions, alle resources
+**Reden:** Zelfde reden als `guardduty_is_enabled`. GuardDuty admin delegation gebeurt centraal vanuit de management account; member accounts hoeven dit niet per region zichtbaar te hebben. We gebruiken enkel eu-west-1 actief — voor de andere regions is delegatie niet zinvol.
+
+### `securityhub_enabled`
+**Gemute voor:** alle regions, alle resources
+**Reden:** Security Hub uitrol is gepland via `inbo-aws-security-hub-terraform` (centraal voor eu-west-1). Findings voor unused regions zijn niet relevant — we gebruiken enkel eu-west-1. Mutelist wordt versmald (regions: eu-west-1 only) zodra de centrale uitrol over alle member accounts is afgerond.
+
+### `s3_bucket_public_access` / `s3_bucket_public_list_acl` / `s3_bucket_level_public_access_block`
 **Gemute voor:** `aloftdata`, `inbo-aloft-uat-eu-west-1-default`
-**Reden:** De aloftdata bucket is bewust publiek toegankelijk. Dit is een open data bucket voor het ALOFT-project (vogelradardata) die publiek beschikbaar moet zijn voor onderzoekers en partners. De UAT-bucket spiegelt deze configuratie voor testdoeleinden.
+**Reden:** De aloftdata bucket is bewust publiek toegankelijk. Dit is een open data bucket voor het ALOFT-project (vogelradardata) die publiek beschikbaar moet zijn voor onderzoekers en partners. Het bucket-level Block Public Access is daarom bewust niet ingeschakeld. De UAT-bucket spiegelt deze configuratie voor testdoeleinden.
 
 ### `iam_root_hardware_mfa_enabled`
 **Gemute voor:** alle accounts
@@ -111,6 +119,14 @@ Laatst bijgewerkt: 2026-04-28
 ### `iam_aws_attached_policy_no_administrative_privileges`
 **Gemute voor:** `AdministratorAccess`
 **Reden:** De AWS-managed AdministratorAccess policy is gekoppeld aan roles die bewust volledige toegang nodig hebben (zie `iam_role_administratoraccess_policy` hierboven voor de specifieke roles en hun verantwoording).
+
+### `secretsmanager_automatic_rotation_enabled`
+**Gemute voor:** alle secrets, behalve `*/rds/*`
+**Reden:** De meeste secrets in onze Secrets Manager zijn niet automatiseerbaar te roteren: 3rd-party API keys (Keycloak client secrets, Google OAuth/OIDC, GitHub PAT, SMTP credentials), TLS-certificaten en applicatie-internal secrets (JWT keys, web admin passwords) kunnen niet zonder coördinatie met externe systemen of zonder applicatie-downtime worden gerotateerd. RDS-secrets (`*/rds/*`) zijn expliciet uitgesloten via `Exceptions` zodat we daar wel rotation kunnen aanzetten (via AWS-managed master password of een rotation lambda).
+
+### `secretsmanager_has_restrictive_resource_policy`
+**Gemute voor:** alle secrets, behalve `*/rds/*`
+**Reden:** Onze secrets worden beschermd via IAM-policies (least-privilege per service-role). Een aanvullende Secrets Manager resource policy is een defense-in-depth maatregel maar geen vereiste in onze architectuur. Voor cross-account toegang gebruiken we wel resource policies; dat zijn de uitzonderingen die voorlopig wel falen omdat ze niet generiek matchen. RDS-secrets zijn uitgesloten omdat we daar wel een restrictieve policy willen afdwingen.
 
 ---
 

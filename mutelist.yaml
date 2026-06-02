@@ -7,6 +7,16 @@ Mutelist:
             - '*'
           Resources:
             - '*'
+        guardduty_delegated_admin_enabled_all_regions:
+          Regions:
+            - '*'
+          Resources:
+            - '*'
+        securityhub_enabled:
+          Regions:
+            - '*'
+          Resources:
+            - '*'
         s3_bucket_public_access:
           Regions:
             - eu-west-1
@@ -14,6 +24,12 @@ Mutelist:
             - inbo-aloft-uat-eu-west-1-default
             - aloftdata
         s3_bucket_public_list_acl:
+          Regions:
+            - eu-west-1
+          Resources:
+            - inbo-aloft-uat-eu-west-1-default
+            - aloftdata
+        s3_bucket_level_public_access_block:
           Regions:
             - eu-west-1
           Resources:
@@ -130,6 +146,22 @@ Mutelist:
             - '*'
           Resources:
             - AdministratorAccess
+        secretsmanager_automatic_rotation_enabled:
+          Regions:
+            - '*'
+          Resources:
+            - '*'
+          Exceptions:
+            Resources:
+              - '*/rds/*'
+        secretsmanager_has_restrictive_resource_policy:
+          Regions:
+            - '*'
+          Resources:
+            - '*'
+          Exceptions:
+            Resources:
+              - '*/rds/*'
     '625469168093':
       Checks:
         ecs_task_definitions_containers_readonly_access:
