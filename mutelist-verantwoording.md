@@ -2,7 +2,7 @@
 
 Dit document beschrijft waarom bepaalde Prowler findings gemute zijn als accepted risk.
 
-Laatst bijgewerkt: 2026-06-02
+Laatst bijgewerkt: 2026-06-30
 
 ---
 
@@ -90,12 +90,26 @@ Laatst bijgewerkt: 2026-06-02
 - `inbo-watina-dov-role`: DOV integratie role met `ecs:RunTask` + `iam:PassRole`. PassRole is beperkt tot `inbo-watina-dov-etl-task-role` en `inbo-watina-dov-etl-task-execution-role`. Role is alleen assumable door een specifiek extern AWS account (DOV/Vlaamse Overheid).
 - `inbo-vbp-pipelines-emr-service-role`: EMR service role met `ec2:RunInstances` + `iam:PassRole`. Beide acties zijn inherent vereist door Amazon EMR om de EC2 instances van het cluster te starten en de instance profile role te koppelen. PassRole is beperkt tot het EMR EC2 instance profile. Dit is de standaard AWS-aanbevolen configuratie voor EMR clusters die door de VBP data pipelines gebruikt worden.
 
+**Toegevoegd 2026-06-30 — Session Manager / ECS-exec gebaseerd (geen `iam:PassRole`).** Prowler vlagt `ssm:StartSession`, `ecs:ExecuteCommand` en `ssm:SendCommand` als priv-esc (je kan zo een shell/command op een instance of task krijgen). Dit is de bedoelde SSH-vervanging; weghalen breekt operationele toegang. Er valt geen `iam:PassRole` te versmallen.
+- `inbo-mne-sampling-developers-role`: `ecs:ExecuteCommand` + `ssm:StartSession`/`TerminateSession`, gescoped tot de eigen ECS-cluster/tasks. Standaard "developers kunnen `aws ecs execute-command` in hun eigen app"-patroon.
+- `inbo-ckan-developer-role`: `ssm:StartSession` op EC2, tag-gescoped (`ssm:ResourceTag/Name = ckan`). Session Manager als SSH-vervanging.
+- `inbo-ckan-lambda-secret-rotation-role`: de wachtwoord-rotatie-Lambda gebruikt `ssm:SendCommand`, gescoped tot het eigen SSM-document en billing-code-getagde instances. Weghalen breekt de credential-rotatie.
+- `inbo-vertigis-developer-role`: `ssm:StartSession` op de VertiGIS Windows-server, tag-gescoped. Bedoeld voor remote beheer.
+- `inbo-vertigis-external-siggis-user`: externe SigGIS-contractor met `ssm:StartSession` (tag-gescoped) voor remote beheer van de VertiGIS-server. By-design; de statische access key wordt apart opgevolgd (zie `iam_user_*`-checks in het werkplan).
+- `inbo-n2kmonitoring-analytics-role`: behoudt bewust `ssm:StartSession` + `ec2:Start/Stop/RebootInstances` op de ranalysis-instance (operators starten daar sessies). Deze SSM/EC2-rechten zijn afgesplitst van het gedeelde S3-doc zodat enkel deze role ze nog heeft (branch `security/n2k-least-privilege-ssm`); de andere n2k-principals (s3-default user, ec2-role, unittest-role) worden zo gefixt en blijven dus niet gemute.
+
+**Toegevoegd 2026-06-30 — EventBridge scheduler met scoped `iam:PassRole`.**
+- `inbo-riparias-scheduler`: EventBridge scheduler-role die riparias ECS-taken start (`ecs:RunTask` + `iam:PassRole`, gescoped tot de riparias task roles), analoog aan `inbo-aloft-eventbridge-scheduler`.
+
 ### `iam_policy_allows_privilege_escalation`
 **Gemute voor:** `inbo-vbp-start-pipelines-policy`, `inbo-github-runners-lambda-execution-policy`, `inbo-vbp-additional-dev-permissions`
 **Reden:**
 - `inbo-vbp-start-pipelines-policy`: Managed policy met `ecs:RunTask` + `iam:PassRole` voor het starten van biodiversiteitsportaal data pipelines. PassRole is beperkt tot specifieke pipeline task roles.
 - `inbo-github-runners-lambda-execution-policy`: GitHub self-hosted runners Lambda policy met `ec2:RunInstances` + `iam:PassRole`. Nodig voor het starten van EC2-based GitHub runners. PassRole is beperkt tot de runner instance profile role.
 - `inbo-vbp-additional-dev-permissions`: Development-only policy voor het biodiversiteitsportaal team. Bevat bredere IAM rechten die nodig zijn voor development workflows. Enkel toegepast in dev accounts.
+- `inbo-developers-policy` *(toegevoegd 2026-06-30)*: org-brede developer-policy met `ssm:StartSession` (Session Manager als SSH-vervanging) + `ssm:TerminateSession`/`ResumeSession`. Geen `iam:PassRole`. Basis-toegang voor alle developers; weghalen breekt SSM-toegang.
+- `inbo-bastion-bastion-ssm-policy` *(toegevoegd 2026-06-30)*: bastion Session Manager-policy, `ssm:StartSession` tag-gescoped tot instances met `Name=bastion`. De bedoelde SSH-vervanging — geen `iam:PassRole`.
+- `inbo-auditor-role-boundary` *(toegevoegd 2026-06-30)*: permissions boundary voor de auditor-role. Een boundary beperkt rechten (verleent ze niet); Prowler vlagt het patroon maar het is by-design.
 
 ### `ecs_task_definitions_containers_readonly_access`
 **Gemute voor:** `inbo-vbp-spatial-service:*` (biodiversiteitsportaal geoserver), `vespadb-*` (vespawatch), `inbo-aloft-*` (aloft), `inbo-waterbirds-*` (waterbirds), `inbo-mne-*` (mne-sampling)
@@ -125,8 +139,8 @@ Laatst bijgewerkt: 2026-06-02
 **Reden:** De meeste secrets in onze Secrets Manager zijn niet automatiseerbaar te roteren: 3rd-party API keys (Keycloak client secrets, Google OAuth/OIDC, GitHub PAT, SMTP credentials), TLS-certificaten en applicatie-internal secrets (JWT keys, web admin passwords) kunnen niet zonder coördinatie met externe systemen of zonder applicatie-downtime worden gerotateerd. RDS-secrets (`*/rds/*`) zijn expliciet uitgesloten via `Exceptions` zodat we daar wel rotation kunnen aanzetten (via AWS-managed master password of een rotation lambda).
 
 ### `secretsmanager_has_restrictive_resource_policy`
-**Gemute voor:** alle secrets, behalve `*/rds/*`
-**Reden:** Onze secrets worden beschermd via IAM-policies (least-privilege per service-role). Een aanvullende Secrets Manager resource policy is een defense-in-depth maatregel maar geen vereiste in onze architectuur. Voor cross-account toegang gebruiken we wel resource policies; dat zijn de uitzonderingen die voorlopig wel falen omdat ze niet generiek matchen. RDS-secrets zijn uitgesloten omdat we daar wel een restrictieve policy willen afdwingen.
+**Gemute voor:** alle secrets (incl. `*/rds/*`) *(uitgebreid 2026-06-30)*
+**Reden:** Onze secrets worden beschermd via IAM-policies (least-privilege per service-role). Een aanvullende Secrets Manager resource policy is een defense-in-depth maatregel maar geen vereiste in onze architectuur. Eerder bleven RDS-secrets via een `Exceptions`-blok zichtbaar met de bedoeling er resource policies aan toe te voegen; dat is heroverwogen. Een resource policy met een vaste reader-principal geeft lockout-risico (applicatie, rotation-lambda, devops, terraform zelf) en moet per secret zorgvuldig bepaald worden; IAM-access wordt als afdoende beschouwd. Daarom zijn nu alle secrets gemute, consistent met de niet-RDS secrets.
 
 ---
 

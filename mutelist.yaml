@@ -101,17 +101,27 @@ Mutelist:
         iam_inline_policy_allows_privilege_escalation:
           Regions:
             - '*'
+          # Findings hebben het formaat RoleName/PolicyName -> wildcard-suffix nodig.
+          # Allemaal by-design: Session Manager (ssm:StartSession) / ecs:ExecuteCommand /
+          # ssm:SendCommand, geen iam:PassRole. Zie mutelist-verantwoording.md.
           Resources:
             - StackSet-CloudHealthRoleUpdate--LambdaExecutionRole-*
-            - inbo-faunabeheer-shinyproxy-wbe-task-role
-            - inbo-faunabeheer-shinyproxy-faunabeheer-task-role
-            - inbo-bodem-role
-            - inbo-aloft-eventbridge-scheduler
-            - BillingConsolePolicyMigratorRole
-            - inbo-watina-github-actions-deploy-lambda-role
-            - inbo-exotenportaal-shinyproxy-task-role
-            - inbo-watina-dov-role
-            - inbo-vbp-pipelines-emr-service-role
+            - inbo-faunabeheer-shinyproxy-wbe-task-role*
+            - inbo-faunabeheer-shinyproxy-faunabeheer-task-role*
+            - inbo-bodem-role*
+            - inbo-aloft-eventbridge-scheduler*
+            - BillingConsolePolicyMigratorRole*
+            - inbo-watina-github-actions-deploy-lambda-role*
+            - inbo-exotenportaal-shinyproxy-task-role*
+            - inbo-watina-dov-role*
+            - inbo-vbp-pipelines-emr-service-role*
+            - inbo-mne-sampling-developers-role*
+            - inbo-ckan-developer-role*
+            - inbo-ckan-lambda-secret-rotation-role*
+            - inbo-vertigis-developer-role*
+            - inbo-vertigis-external-siggis-user*
+            - inbo-riparias-scheduler*
+            - inbo-n2kmonitoring-analytics-role*
         iam_policy_allows_privilege_escalation:
           Regions:
             - '*'
@@ -119,6 +129,10 @@ Mutelist:
             - inbo-vbp-start-pipelines-policy
             - inbo-github-runners-lambda-execution-policy
             - inbo-vbp-additional-dev-permissions
+            # By-design Session Manager / boundary policies, geen iam:PassRole.
+            - inbo-developers-policy
+            - inbo-bastion-bastion-ssm-policy
+            - inbo-auditor-role-boundary
         ecs_task_definitions_containers_readonly_access:
           Regions:
             - eu-west-1
@@ -154,14 +168,13 @@ Mutelist:
           Exceptions:
             Resources:
               - '*/rds/*'
+        # IAM-access wordt als afdoende beschouwd voor alle secrets, incl. RDS.
+        # Eerder bleven RDS-secrets via Exceptions zichtbaar; nu volledig gemute.
         secretsmanager_has_restrictive_resource_policy:
           Regions:
             - '*'
           Resources:
             - '*'
-          Exceptions:
-            Resources:
-              - '*/rds/*'
     '625469168093':
       Checks:
         ecs_task_definitions_containers_readonly_access:
