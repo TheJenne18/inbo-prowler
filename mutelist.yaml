@@ -12,11 +12,24 @@ Mutelist:
             - '*'
           Resources:
             - '*'
+        securityhub_delegated_admin_enabled_all_regions:
+          Regions:
+            - '*'
+          Resources:
+            - '*'
+        config_delegated_admin_and_org_aggregator_all_regions:
+          Regions:
+            - '*'
+          Resources:
+            - '*'
         securityhub_enabled:
           Regions:
             - '*'
           Resources:
             - '*'
+          Exceptions:
+            Regions:
+              - eu-west-1
         s3_bucket_public_access:
           Regions:
             - eu-west-1

@@ -17,8 +17,20 @@ Laatst bijgewerkt: 2026-06-30
 **Reden:** Zelfde reden als `guardduty_is_enabled`. GuardDuty admin delegation gebeurt centraal vanuit de management account; member accounts hoeven dit niet per region zichtbaar te hebben. We gebruiken enkel eu-west-1 actief — voor de andere regions is delegatie niet zinvol.
 
 ### `securityhub_enabled`
-**Gemute voor:** alle regions, alle resources
-**Reden:** Security Hub uitrol is gepland via `inbo-aws-security-hub-terraform` (centraal voor eu-west-1). Findings voor unused regions zijn niet relevant — we gebruiken enkel eu-west-1. Mutelist wordt versmald (regions: eu-west-1 only) zodra de centrale uitrol over alle member accounts is afgerond.
+**Gemute voor:** alle regions **behalve eu-west-1** (`Exceptions.Regions: [eu-west-1]`, versmald 2026-09-07)
+**Reden:** Findings voor ongebruikte regions zijn niet relevant — we gebruiken enkel eu-west-1. De eerder aangekondigde versmalling is nu doorgevoerd: eu-west-1 blijft zichtbaar, zodat een echte leemte niet meer onder de blanket-mute verdwijnt.
+**Gevolg:** 2 findings staan nu actief — Security Hub is niet ingeschakeld in **dev** en **shared-infra** (eu-west-1). In uat, prod en de security-account (644327983020, hub actief sinds 2025-09-02) draait het wel. Uit te rollen via `inbo-aws-security-hub-terraform`; deze 2 findings blijven terugkomen tot dat gebeurd is.
+
+### `securityhub_delegated_admin_enabled_all_regions` / `config_delegated_admin_and_org_aggregator_all_regions`
+**Gemute voor:** alle regions, alle resources (toegevoegd 2026-09-07)
+**Reden:** Twee onafhankelijke redenen, beide verifieerbaar.
+
+1. **Principieel niet bepaalbaar vanuit een member-account.** Prowler draait per account; `organizations:ListDelegatedAdministrators` kan alleen beantwoord worden vanuit de management-account of een delegated administrator. Vanuit elk ander account geeft de call `AccessDeniedException` ("You don't have permissions to access this resource") — een organisatie-restrictie, niet op te lossen met extra IAM-permissies op de scanner-role. Geverifieerd op 2026-09-07 vanuit account 644327983020 met `inbo-devops-role`. Vandaar de statustekst "delegated administrator status could not be determined", identiek in alle 17 regions × 3 accounts (51 findings).
+2. **Bewuste architectuurkeuze.** Volgens de README van `inbo-aws-security-hub-terraform` beheert elk account zijn eigen findings, zonder centrale aggregatie. De check verwacht juist het tegenovergestelde. Idem voor de Config Organization Aggregator (3 findings).
+
+Zelfde patroon als de bestaande `guardduty_delegated_admin_enabled_all_regions`-mute.
+
+> Let op: het "Security Hub not enabled"-signaal dat in de dev-variant van deze check meelift, gaat hierdoor niet verloren — dat wordt gedekt door `securityhub_enabled` hierboven, dat sinds 2026-09-07 eu-west-1 juist wél toont.
 
 ### `s3_bucket_public_access` / `s3_bucket_public_list_acl` / `s3_bucket_level_public_access_block`
 **Gemute voor:** `aloftdata`, `inbo-aloft-uat-eu-west-1-default`
