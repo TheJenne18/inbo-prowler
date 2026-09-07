@@ -70,6 +70,9 @@ Mutelist:
           Resources:
             - inbo-vbp-biocache-index-management
             - inbo-watina-pressuremeasurement-status-change-function
+            - inbo-watina-calibration-function
+            - inbo-ckan-password-rotation-ec2
+            - inbo-waterbirds-password-rotation-dbuser
         s3_account_level_public_access_blocks:
           Regions:
             - '*'
@@ -85,12 +88,20 @@ Mutelist:
             - eu-west-1
           Resources:
             - inbo-watina-calibration-function
+            - inbo-watina-pressuremeasurement-status-change-function
+            - inbo-vbp-species-lists-api
         ecs_task_definitions_no_environment_secrets:
           Regions:
             - eu-west-1
           Resources:
             - inbo-bodem-dov-etl:*
             - inbo-watina-dov-etl:*
+            - inbo-bobo-app:*
+            - inbo-inboveg-app:*
+            - inbo-keycloak-app:*
+            - inbo-vis-app:*
+            - inbo-waterbirds-app:*
+            - inbo-watina-app:*
         iam_role_cross_account_readonlyaccess_policy:
           Regions:
             - '*'

@@ -50,10 +50,15 @@ Laatst bijgewerkt: 2026-06-30
 **Reden:** Legacy IAM user met AdministratorAccess. Wordt gemigreerd naar IAM Identity Center. Tijdelijk gemute tot migratie afgerond is.
 
 ### `awslambda_function_no_secrets_in_code`
-**Gemute voor:** `inbo-vbp-biocache-index-management`, `inbo-watina-pressuremeasurement-status-change-function`
+**Gemute voor:** `inbo-vbp-biocache-index-management`, `inbo-watina-pressuremeasurement-status-change-function`, `inbo-watina-calibration-function`, `inbo-ckan-password-rotation-ec2`, `inbo-waterbirds-password-rotation-dbuser` (laatste drie toegevoegd 2026-09-07)
 **Reden:**
 - **inbo-vbp-biocache-index-management**: False positive. De Lambda function bevat een Node.js dependency (npm package) die een private key template/placeholder bevat in de gebundelde code. Dit is geen echte secret maar een patroon in de library code dat door Prowler's regex-detectie als secret wordt herkend.
 - **inbo-watina-pressuremeasurement-status-change-function**: False positive. Prowler detecteert een "Hex High Entropy String" in het bestand `about.mappings` (regel 5) in de shadow JAR. Dit bestand is afkomstig van een Eclipse/Spring library dependency en bevat een git commit hash (`c6d5b3bf2ad1176192d6b8084299d5c9d1345046`), geen echte secret. De Lambda zelf haalt database credentials correct op via AWS Secrets Manager.
+- **inbo-watina-calibration-function**: False positive. Alle treffers zitten in gebundelde JAR-dependencies, niet in eigen code: `io/netty/handler/ssl/*.class` (OpenSsl, SslUtils, JdkSslServerContext -- netty's ingebouwde test-certificaten) en `com/microsoft/sqlserver/jdbc/SQLServerResource_*.class` (i18n-resourcebundles van de MSSQL-driver met vertaalde foutmeldingen over "username and password"). De enige eigen klasse in de lijst, `be/inbo/watina/async/lambda/jdbc/SingleConnectionDataSource.class`, matcht op de veldnamen `username`/`password`, niet op waarden.
+- **inbo-ckan-password-rotation-ec2**: False positive. Broncode nagelezen (`inbo-aws-ckan-terraform/region/common-region/lambda_function/lambda_function.py`): alle credentials komen uit `current_credentials[...]`, opgehaald uit Secrets Manager; het nieuwe wachtwoord wordt gegenereerd via `get_random_password()`. De treffers op regel 23/29/38 zijn de parameternamen `MasterUserPassword=` en `password=`. Overige treffers zitten in de meegeleverde packages `asn1crypto` en `scramp`.
+- **inbo-waterbirds-password-rotation-dbuser**: False positive (uat + prod). Broncode nagelezen (`inbo-aws-watervogels-terraform/region/common-region/lambda_function_dbuser.py`): leest host/dbname/username/password uit Secrets Manager, genereert een nieuw wachtwoord via `get_random_password(PasswordLength=50)` en schrijft dat terug. Geen literal credential in de code; de treffers zijn de parameternamen in de `pg8000.native.Connection(...)`-aanroep.
+
+> Bewust NIET gemute: `inbo-shop-prod-create-checkout-session` en `inbo-shop-prod-stripe-webhook` (beide prod). De treffers wijzen op `node_modules/stripe/**` en `@types/node/url.d.ts`, maar de eigen handler-code is nog niet nagelezen -- blijft openstaan als actieve CRITICAL.
 
 ### `s3_account_level_public_access_blocks`
 **Gemute voor:** alle accounts
@@ -64,12 +69,21 @@ Laatst bijgewerkt: 2026-06-30
 **Reden:** Root credentials management (centralized root access) is een relatief nieuwe AWS Organizations feature. De uitrol hiervan wordt gepland maar heeft geen directe security impact aangezien root login al beperkt is via Organizations SCP's.
 
 ### `awslambda_function_no_secrets_in_variables`
-**Gemute voor:** `inbo-watina-calibration-function`
-**Reden:** False positive. De environment variable bevat een ARN-referentie naar een secret in Secrets Manager, niet de secret value zelf. Prowler detecteert het woord "secret" in de variabelenaam.
+**Gemute voor:** `inbo-watina-calibration-function`, `inbo-watina-pressuremeasurement-status-change-function`, `inbo-vbp-species-lists-api` (laatste twee toegevoegd 2026-09-07)
+**Reden:**
+- **inbo-watina-calibration-function**: False positive. De environment variable bevat een ARN-referentie naar een secret in Secrets Manager, niet de secret value zelf. Prowler detecteert het woord "secret" in de variabelenaam.
+- **inbo-watina-pressuremeasurement-status-change-function**: False positive. `WATINA_DATASOURCE_URL` = `jdbc:sqlserver://${sql_server_ip}:1433;databaseName=D0025_00_Watina;encrypt=false` -- host, poort en databasenaam, geen credentials. De credentials worden opgehaald via `WATINA_AWS_SECRET_ID`, dat ernaast staat en naar Secrets Manager wijst (`inbo-aws-watina-terraform/region/common-region/lambda.tf:43-45`).
+- **inbo-vbp-species-lists-api** (dev/uat/prod): False positive. `SPRING_APPLICATION_JSON` bevat `mongodb://$${mongo_username}:$${mongo_password}@...`; de dubbele `$$` is Terraform-escaping, dus de gerenderde env-var bevat de letterlijke placeholders `${mongo_username}` / `${mongo_password}`. Die worden at runtime door Spring opgelost uit de property source die via `"spring.config.import" = "aws-secretsmanager:<secret>"` wordt geladen (`inbo-aws-biodiversiteitsportaal-terraform/region/common-region/lambda_species_lists.tf:42,80,285-293`). Zelfde constructie voor de keycloak client secrets in dezelfde variabele.
+  > Corrigeert de eerdere inschatting van 2026-07-14, die dit als mogelijk echt hardcoded credential markeerde. Er staat geen waarde in de env-var.
 
 ### `ecs_task_definitions_no_environment_secrets`
 **Gemute voor:** `inbo-bodem-dov-etl:*`, `inbo-watina-dov-etl:*`
 **Reden:** De environment variables bevatten ARN-referenties naar Secrets Manager secrets (DOV_WEB_SERVER_KEYS_SECRET_ARN, DATABASE_CREDENTIALS_SECRET_ARN), niet de plaintext secret values. De applicatie gebruikt deze ARNs om de secrets zelf op te halen uit Secrets Manager at runtime. Prowler herkent "SECRET_ARN" in de variabelenaam als een potentieel secret.
+
+**Gemute voor:** `inbo-bobo-app:*`, `inbo-inboveg-app:*`, `inbo-keycloak-app:*`, `inbo-vis-app:*`, `inbo-waterbirds-app:*`, `inbo-watina-app:*` (toegevoegd 2026-09-07)
+**Reden:** Spring Boot-applicaties met een JDBC-URL in `SPRING_DATASOURCE_URL` / `KC_DB_URL` / `*_DATASOURCE_URL`. De URL bevat enkel host, poort en databasenaam (`jdbc:sqlserver://${host}:1433;databaseName=X;encrypt=false`); username en wachtwoord worden apart geinjecteerd via het `secrets`-blok uit Secrets Manager (bv. `inbo-aws-vis-terraform/region/common-region/ecs.tf:145-162`). Grotendeels gegenereerd door de gedeelde module `inbo-aws-modules-databeheer-spring-boot-region/ecs.tf:100`. Prowler's detector vlagt elke JDBC-connectiestring als "JDBC connection string with embedded credentials", ongeacht of er credentials in staan.
+
+> Let op: `inbo-vbp-solr-efs-*` is bewust NIET gemute (5 findings: dev 1, uat 1, prod 3). Daar wordt het ZooKeeper-wachtwoord wel plaintext in de task definition geinterpoleerd -- een echte exposure, leesbaar met `ecs:DescribeTaskDefinition`. Uitgewerkt in `vbp-solr-zookeeper-secret-plan.md`; wordt extern opgepakt door het VBP-team.
 
 ### `iam_role_cross_account_readonlyaccess_policy`
 **Gemute voor:** `SnowOrganizationAccount*`, `inbo-biodiversiteitsportaal-developers-role`, `inbo-developers-role`
