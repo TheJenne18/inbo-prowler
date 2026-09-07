@@ -79,6 +79,7 @@ def main():
     active = collections.defaultdict(lambda: collections.defaultdict(int))   # sev -> acct -> n
     muted_c = collections.defaultdict(lambda: collections.defaultdict(int))
     high_by_check = collections.defaultdict(lambda: collections.defaultdict(list))  # check -> acct -> [res]
+    crit_active = []   # (acct, check, res, status_extended) voor actieve CRITICAL findings
     for f in findings:
         acct, reg, res = parse_uid(f['resource_uid'])
         if acct is None: acct, reg, res = f['account_id'], '', f['resource_name']
@@ -89,6 +90,8 @@ def main():
             active[sev][acct] += 1
             if sev == 'high':
                 high_by_check[f['check_id']][acct].append(res)
+            elif sev == 'critical':
+                crit_active.append((acct, f['check_id'], res, f.get('status_extended', '')))
 
     o = []
     P = o.append
@@ -103,7 +106,7 @@ def main():
         if s['uid'] in seen: continue
         seen.add(s['uid'])
         P(f"| inbo-{s['alias'].replace('inbo-','')} | `{s['uid']}` | {s['scan_date'][:10]} |")
-    P("\n> Scans zijn vers (1-7 dagen oud). De mei-data was onvolledig (vastgelopen uat/prod-scans); die undercount is nu gecorrigeerd.\n")
+    P("\n> Scans zijn vers (2 dagen oud, 2026-07-12); alle vier de AWS-accounts hebben een completed scan.\n")
 
     def sevtable(title, d):
         P(f"### {title}\n")
@@ -116,6 +119,17 @@ def main():
     P("## Totaaloverzicht (actief, na mutelist)\n")
     sevtable("Actieve findings", active)
     sevtable("Gemute findings (in mutelist.yaml)", muted_c)
+
+    if crit_active:
+        P(f"## CRITICAL — direct opvolgen ({len(crit_active)} actief)\n")
+        P("Actieve CRITICAL-findings na mutelist. Hoogste prioriteit: per resource beslissen "
+          "fixen of (mits verantwoord) muten.\n")
+        for acct, chk, res, ext in sorted(crit_active):
+            P(f"- **{ALIAS.get(acct, acct)}** — `{chk}`")
+            P(f"  - resource: `{res}`")
+            if ext:
+                P(f"  - {ext}")
+        P("")
 
     tot_high = sum(active['high'].values())
     P(f"## HIGH actieplan ({tot_high} actieve findings)\n")
